@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace QuizTest
 {
@@ -13,84 +14,92 @@ namespace QuizTest
             {
                 Console.WriteLine("Type in END to stop.");
                 Console.Write("Calculation : ");
-                input = Console.ReadLine();
-                if(input.ToUpper() != "END")
+                input = Console.ReadLine().TrimStart().TrimEnd();
+                if (input.ToUpper() != "END")
                 {
                     List<string> inputList = input.Split(" ").ToList();
-                    double value = 0;
                     List<string> tempList = new List<string>();
+                    double value = 0;
                     int tempPost = 0;
                     double tempValue;
-
-                    while (inputList.Contains("/") || inputList.Contains("*"))
+                    if (InputValidation(inputList))
                     {
-                        for (int j = 1; j < inputList.Count; j+=2)
+                        inputList  = inputList.Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
+                        while (inputList.Contains("/") || inputList.Contains("*"))
                         {
-                            if (inputList[j] == "/" || inputList[j] == "*")
+                            for (int j = 1; j < inputList.Count; j+=2)
                             {
-                                tempPost = j;
-                                break;
+                                if (inputList[j] == "/" || inputList[j] == "*")
+                                {
+                                    tempPost = j;
+                                    break;
+                                }
                             }
-                        }
 
-                        for (int i = 0; i < inputList.Count; i++)
-                        {
-                            if ((inputList[i] == "/" || inputList[i] == "*") && i == tempPost)
+                            for (int i = 0; i < inputList.Count; i++)
                             {
-                                if (inputList[i] == "/")
-                                    tempValue = Division(Convert.ToDouble(inputList[i - 1]), Convert.ToDouble(inputList[i + 1]));
+                                if ((inputList[i] == "/" || inputList[i] == "*") && i == tempPost)
+                                {
+                                    if (inputList[i] == "/")
+                                        tempValue = Division(Convert.ToDouble(inputList[i - 1]), Convert.ToDouble(inputList[i + 1]));
+                                    else
+                                        tempValue = Multiplication(Convert.ToDouble(inputList[i - 1]), Convert.ToDouble(inputList[i + 1]));
+                                    tempList.Add(tempValue.ToString());
+                                }
                                 else
-                                    tempValue = Multiplication(Convert.ToDouble(inputList[i - 1]), Convert.ToDouble(inputList[i + 1]));
-                                tempList.Add(tempValue.ToString());
+                                {
+                                    if (i != tempPost - 1 && i != tempPost + 1)
+                                        tempList.Add(inputList[i]);
+                                }
                             }
-                            else
-                            {
-                                if (i != tempPost - 1 && i != tempPost + 1)
-                                    tempList.Add(inputList[i]);
-                            }
-                        }
-                        inputList = tempList;
-                        tempList = new List<string>();
-                    }
-
-                    while (inputList.Contains("+") || inputList.Contains("-"))
-                    {
-                        for (int j = 1; j < inputList.Count; j+=2)
-                        {
-                            if (inputList[j] == "+" || inputList[j] == "-")
-                            {
-                                tempPost = j;
-                                break;
-                            }
+                            inputList = tempList;
+                            tempList = new List<string>();
                         }
 
-                        for (int i = 0; i < inputList.Count; i++)
+                        while (inputList.Contains("+") || inputList.Contains("-"))
                         {
-                            if (i == tempPost)
+                            for (int j = 1; j < inputList.Count; j+=2)
                             {
-                                if (inputList[i] == "+")
-                                    tempValue = Addition(Convert.ToDouble(inputList[i - 1]), Convert.ToDouble(inputList[i + 1]));
+                                if (inputList[j] == "+" || inputList[j] == "-")
+                                {
+                                    tempPost = j;
+                                    break;
+                                }
+                            }
+
+                            for (int i = 0; i < inputList.Count; i++)
+                            {
+                                if (i == tempPost)
+                                {
+                                    if (inputList[i] == "+")
+                                        tempValue = Addition(Convert.ToDouble(inputList[i - 1]), Convert.ToDouble(inputList[i + 1]));
+                                    else
+                                        tempValue = Minus(Convert.ToDouble(inputList[i - 1]), Convert.ToDouble(inputList[i + 1]));
+                                    tempList.Add(tempValue.ToString());
+                                }
                                 else
-                                    tempValue = Minus(Convert.ToDouble(inputList[i - 1]), Convert.ToDouble(inputList[i + 1]));
-                                tempList.Add(tempValue.ToString());
+                                {
+                                    if (i != tempPost - 1 && i != tempPost + 1)
+                                        tempList.Add(inputList[i]);
+                                }
                             }
-                            else
-                            {
-                                if (i != tempPost - 1 && i != tempPost + 1)
-                                    tempList.Add(inputList[i]);
-                            }
+                            inputList = tempList;
+                            tempList = new List<string>();
                         }
-                        inputList = tempList;
-                        tempList = new List<string>();
-                    }
 
-                    if (inputList.Count == 1)
+                        if (inputList.Count == 1)
+                        {
+                            value = Convert.ToDouble(inputList[0]);
+                        }
+
+                        Console.WriteLine("Your answer in 4 decimal points : " + Math.Round(value, 4));
+                        Console.WriteLine();
+                    }
+                    else
                     {
-                        value = Convert.ToDouble(inputList[0]);
+                        Console.WriteLine("Invalid inputs. Please try again");
+                        Console.WriteLine();
                     }
-
-                    Console.WriteLine("Your answer : " + value);
-                    Console.WriteLine();
                 }
                 else
                 {
@@ -98,6 +107,19 @@ namespace QuizTest
                 }
             }
             Console.WriteLine("Thank you for using me.");
+        }
+
+        private static bool InputValidation(List<string> inputList)
+        {
+            for(int i = 0; i < inputList.Count; i++)
+            {
+                if(!Regex.IsMatch(inputList[i], @"^[0-9]+$"))
+                {
+                    if(!Regex.IsMatch(inputList[i], @"^[\+\-\*\/]+$"))
+                        return false;
+                }
+            }
+            return true;
         }
 
         private static double Division(double integerBefore, double integerAfter)
