@@ -92,7 +92,10 @@ namespace QuizTest
                     Console.WriteLine("Your answer : " + value);
                     Console.WriteLine();
                 }
-                break;
+                else
+                {
+                    break;
+                }
             }
             Console.WriteLine("Thank you for using me.");
         }
